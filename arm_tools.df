@@ -1,0 +1,230 @@
+##################################################
+# This docker file creates an Arm cross compiler
+# platform from Ubunto, tools included:
+# 	   ntp
+#	   zlib
+#	   openssl
+#	   certificates
+#	   curl and libcurl
+#	   python 2.7.3 and modules urllib3 and ssl
+#
+# The image that results from this dockerfile should be run interactively
+# and the arm_tools.tar.gz file should be scp'ed to the target system.
+# On the target system go to /usr/local and gunzip the compressed file and 
+# untar it.  The correct components should now be distributed appropriately in
+# /usr/local/*.  In /usr/local/bin is a simple script arm_setup.  execute
+# /usr/local/bin/arm_setup and reboot the target and the tools should work.
+#
+# A good test of success is to run the follwoing command on the target after
+# the above installation is complete.
+#
+# python /usr/local/lib/python2.7/test/test*all*/py
+#
+# If all is well it should take a bit of time to run all of the python tests
+# and complete with an OK
+##################################################
+
+# Ubunto + gcc tools as base image
+FROM ubuntu_gcc
+
+MAINTAINER J. Kelly Flanagan, Brigham Young University
+
+# ADD cross compiler tools and unpack
+# create destination directory
+# ADD source
+ADD arm-2011.09* /usr/local/arm
+ADD mkubifsimage /bin/
+RUN chmod 777 /bin/mkubifsimage
+
+# add ntp and build it
+##ADD ntp-4.2.8p1.tar.gz /usr/local/arm/src/
+# compile ntp
+##WORKDIR /usr/local/arm/src/ntp-4.2.8p1
+##RUN NM=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-nm \
+##    RANLIB=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-ranlib \
+##    CC=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-gcc \
+##    AR=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-ar \
+##    AS=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-as \
+##    LD=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-ld \
+##    ./configure --host=arm-none-linux-gnueabi --target=arm-none-linux-gnueabi \
+##    --build=i586-pc-linux-gnu --with-yielding-select=yes
+##RUN make
+##RUN make install
+# add ntp related files
+##ADD S49ntp /usr/local/arm/etc/
+##ADD S96cron /usr/local/arm/etc/
+##ADD ntp.conf /usr/local/arm/etc/
+##ADD arm_setup /usr/local/arm/bin/
+
+# add zlib library and build it
+# ADD source
+##ADD zlib-1.2.8.tar.gz /usr/local/arm/src/
+# compile zlib
+##WORKDIR /usr/local/arm/src/zlib-1.2.8
+##RUN NM=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-nm \
+##    RANLIB=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-ranlib \
+##    CC=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-gcc \
+##    AR=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-ar \
+##    AS=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-as \
+##    LD=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-ld \
+##    ./configure --static --prefix=/usr/local/arm/
+##RUN make
+##RUN make install
+
+# add openSSL library and build it
+# ADD source
+##ADD openssl-1.0.2.tar.gz /usr/local/arm/src/
+# compile openSSL
+##WORKDIR /usr/local/arm/src/openssl-1.0.2
+##RUN NM=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-nm \
+##    RANLIB=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-ranlib \
+##    CC=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-gcc \
+##    AR=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-ar \
+##    AS=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-as \
+##    LD=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-ld \
+##    ./config no-shared no-threads arm-linux:arm-none-linux-gnueabi- \
+##    --prefix=/usr/local/arm/
+##RUN make
+##RUN make install_sw
+
+# populate certificate directory
+##ADD cacert.pem /usr/local/arm/ssl/
+##WORKDIR /usr/local/arm/ssl/certs
+##RUN awk 'BEGIN {c=0;} /BEGIN CERT/{c++} \
+##    { print > "cert." c ".pem"}' < ../cacert.pem
+##RUN for file in *.pem; do \
+##    ln -s $file `/usr/bin/openssl x509 -hash -noout -in $file`.0; \
+##    done
+
+# add libcurl and build it
+# point to needed headers and libs
+# ADD source
+##ADD curl-7.40.0.tar.gz /usr/local/arm/src/
+# compile libcurl
+##WORKDIR /usr/local/arm/src/curl-7.40.0
+##RUN NM=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-nm \
+##    RANLIB=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-ranlib \
+##    CC=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-gcc \
+##    AR=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-ar \
+##    AS=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-as \
+##    LD=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-ld \
+##    LIBS="-lssl -lcrypto" \
+##    CPPFLAGS="-I/usr/local/arm/include -I/usr/local/arm/include/openssl" \
+##    LDFLAGS="-L/usr/local/arm/lib" \
+##    ./configure --with-ca-path=/usr/local/arm/ssl/certs --with-ssl --with-zlib \
+##    --build=i586-pc-linux-gnu --host=arm-none-linux-gnueabi \
+##    --target=arm-none-linux-gnueabi --disable-shared --prefix=/usr/local
+##RUN make
+##RUN make install
+
+# Build python environment for arm
+# ADD source for python
+##ADD Python-2.7.3.tar.bz2 /usr/local/arm/src/
+##ADD Python-2.7.3-xcompile.patch /usr/local/arm/src/Python-2.7.3/
+# compile python with native compiler
+##WORKDIR /usr/local/arm/src/Python-2.7.3
+##RUN ./configure
+##RUN make python Parser/pgen
+# move binaries aside so they can be used later
+##RUN mv python hostpython
+##RUN mv Parser/pgen Parser/hostpgen
+# clean the distribution
+##RUN make distclean
+# patch the source code for cross compilation
+##RUN patch -p1 < Python-2.7.3-xcompile.patch
+
+# setup env to include /usr/local/arm/* for python
+##ENV PYTHON_XCOMPILE_DEPENDENCIES_PREFIX=/usr/local/arm
+
+# config the python environment for cross compilation
+##RUN NM=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-nm \
+##    RANLIB=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-ranlib \
+##    CC=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-gcc \
+##    AR=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-ar \
+##    AS=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-as \
+##    LD=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-ld \
+##    ./configure --host=arm-none-linux-gnueabi
+
+# build python with cross compiler
+##RUN make HOSTPYTHON=./hostpython HOSTPGEN=./Parser/hostpgen \
+##    BLDSHARED="/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-gcc \
+##    -shared" CROSS_COMPILE=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi- \
+##    CROSS_COMPILE_TARGET=yes HOSTARCH=arm-none-linux-gnueabi \
+##    BUILDARCH=x86_64-linux-gnu
+##
+# install python components in /usr/local/arm/*
+##RUN make install HOSTPYTHON=./hostpython \
+##    BLDSHARED="/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-gcc -shared" \
+##    CROSS_COMPILE=arm-none-linux-gnueabi- CROSS_COMPILE_TARGET=yes \
+##    prefix=/usr/local
+
+# now include necessary python modules
+# add urllib3 and requests
+##ADD urllib3.tar.gz /usr/local/arm/src/python_modules/
+##ADD requests-2.5.3-1.tar.gz /usr/local/arm/src/python_modules/
+
+##ADD setuptools-14.3.1.tar.gz /usr/local/arm/src/python_modules/
+##ADD pyserial-2.7.tar.gz /usr/local/arm/src/python_modules/
+##ADD websocket_client-0.26.0.tar.gz /usr/local/arm/src/python_modules/
+##ADD ablib-master.tar.gz /usr/local/arm/src/python_modules/
+##ADD six-1.9.0.tar.gz /usr/local/arm/src/python_modules/
+# install must take place on target system - arm_setup takes care of it
+
+
+# add alsa-lib and build it
+##ADD alsa-lib-1.1.1.tar.bz2 /usr/local/arm/src/
+# compile alsa-lib
+##WORKDIR /usr/local/arm/src/alsa-lib-1.1.1
+##RUN CC=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-gcc \
+##    ./configure --enable-shared=no --enable-static=yes \
+##    --host=arm-linux --prefix=/usr/local
+##RUN make
+##RUN make install
+
+
+# had to modify configure in source to include -lrt
+# add alsa-utils and build it
+##ADD alsa-utils-1.1.1.tar.gz /usr/local/arm/src/
+# compile alsa-utils
+##WORKDIR /usr/local/arm/src/alsa-utils-1.1.1
+##RUN  CC=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-gcc \
+##     ./configure --host=arm-linux --prefix=/usr/local/arm/ \
+##     --with-alsa-inc-prefix=/usr/local/arm/include \
+##     --with-alsa-prefix=/usr/local/arm/lib --disable-alsamixer \
+##     --disable-xmlto --disable-nls
+##RUN make
+##RUN make install
+
+
+# add mpg123 source
+##ADD mpg123-1.22.1.tar.bz2 /usr/local/arm/src/
+# compile mpg123
+##WORKDIR /usr/local/arm/src/mpg123-1.22.1
+##RUN  ./configure LDFLAGS="-L/usr/local/arm/lib/" CFLAGS="-I/usr/local/arm/include/" \
+##     CC=/usr/local/arm/arm-2011.09/bin/arm-none-linux-gnueabi-gcc --host=arm-linux \
+##     --prefix=/usr/local --enable-static=yes --enable-shared=no \
+##     --enable-network=no --with-default-audio=alsa
+##RUN make
+##RUN make install
+
+# prepare a tar ball to send to the target
+##WORKDIR /usr/local
+##RUN tar cvfz /usr/local/arm/arm_tools.tar.gz bin etc include \
+##    lib/*.*a lib/python2.7 ssl src/python_modules share/alsa/
+##ENV HOME=/home
+
+# The image that results from this dockerfile should be run interactively
+# and the arm_tools.tar.gz file should be scp'ed to the target system.
+# On the target system go to /usr/local and gunzip the compressed file and 
+# untar it.  The correct components should now be distributed appropriately in
+# /usr/local/arm/*.  In /usr/local/arm/bin is a simple script arm_setup.  execute
+# /usr/local/arm/bin/arm_setup and reboot the target and the tools should work.
+#
+# A good test of success is to run the follwoing command on the target after
+# the above installation is complete.
+#
+# python /usr/local/arm/lib/python2.7/test/test*all*/py
+#
+# If all is well it should take a bot of time to run all of the python tests
+# and complete with an OK
+

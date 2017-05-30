@@ -1,0 +1,28 @@
+#! /bin/sh
+#
+# System-V type init script for cron daemon
+#
+
+DESC="Start crond"
+NAME=crond
+CRON_ENTRY=/home/myDoorbell/cron/myDoorbell.cron
+CRON_HOME=/var/spool/cron/crontabs
+CRON_USER=root
+DAEMON=/usr/sbin/$NAME
+
+# Gracefully exit if the package has been removed.
+test -x $DAEMON || exit 0
+
+# create directories as needed
+mkdir -p $CRON_HOME
+
+# install cron file
+cp $CRON_ENTRY $CRON_HOME/$CRON_USER
+
+# start crond
+if [ -x $DAEMON ] ; then
+	echo -n "Starting crond"
+	$DAEMON
+fi
+
+exit 0

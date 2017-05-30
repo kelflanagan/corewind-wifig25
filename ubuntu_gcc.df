@@ -1,0 +1,27 @@
+##################################################
+# This docker file creates an ubunto image with  #
+# a gcc compiler	      	  		 #
+##################################################
+
+# Ubunto as base image
+FROM ubuntu
+
+MAINTAINER J. Kelly Flanagan, Brigham Young University
+
+# update ubuntu image
+RUN apt-get update
+
+# install scp to enable file transfer to target
+RUN apt-get update
+RUN apt-get -y install openssh-client
+
+# install openssl to create certificate links
+RUN apt-get -y install openssl
+
+# enable 32 bit code to run on 64 bit machine
+RUN apt-get -y install lib32z1
+
+# install the gcc tools to enable compilation
+RUN apt-get -y install gcc build-essential libncurses5-dev \
+    mtd-utils u-boot-tools
+

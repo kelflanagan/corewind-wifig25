@@ -1,0 +1,68 @@
+#! /bin/sh
+#
+# Script to initially setup arm environment
+# This script should be run on the development board
+#
+
+PATH=/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+ALSA_CONF=alsa.conf
+# CRON_STARTUP=S96cron
+NTP_STARTUP=S49ntp
+NTP_CONFIG=ntp.conf
+DAEMON=ntpd
+ARM_TOOLS=arm_tools.tar
+PYTHON_MODULES=/src/python_modules
+
+echo "Cleaning up existing NTP files"
+# clean up existing ntp stuff
+if [ -r /etc/default/$DAEMON ]
+then
+	rm /etc/default/$DAEMON
+fi
+
+if [ -r /etc/init.d/$NTP_STARTUP ]
+then
+	rm /etc/init.d/$NTP_STARTUP
+fi
+
+echo "Install NTP"
+# put needed files in place
+if [ -r /usr/local/etc/$NTP_CONFIG ]
+then
+	mv /usr/local/etc/$NTP_CONFIG /etc/$NTP_CONFIG
+	chmod 644 /etc/$NTP_CONFIG
+fi
+
+if [ -r /usr/local/etc/$NTP_STARTUP ]
+then
+	mv /usr/local/etc/$NTP_STARTUP /etc/init.d/$NTP_STARTUP
+	chmod 755 /etc/init.d/$NTP_STARTUP
+fi
+
+# echo "Start cron"
+# if [ -r /usr/local/etc/$CRON_STARTUP ]
+# then
+# 	mv /usr/local/etc/$CRON_STARTUP /etc/init.d/$CRON_STARTUP
+# 	chmod 755 /etc/init.d/$CRON_STARTUP
+# fi
+
+if [ -r /usr/local/$ARM_TOOLS ]
+then
+	rm /usr/local/$ARM_TOOLS
+fi
+
+echo "Install Python modules"
+# install python modules
+if [ -r /usr/local/$PYTHON_MODULES ]
+then
+    cd /usr/local/$PYTHON_MODULES
+    for i in *
+    do
+	echo "Installing python module: $i"
+	cd /usr/local/src/python_modules/$i
+	python setup.py install >& /dev/null
+    done
+    rm -rf /usr/local/src
+fi
+echo "Done!"
+exit 0
